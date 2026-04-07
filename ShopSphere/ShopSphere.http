@@ -1,0 +1,6 @@
+@ShopSphere_HostAddress = http://localhost:5105
+
+GET {{ShopSphere_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -151,6 +151,113 @@ namespace ShopSphere.Services
             };
         }
 
+        public async Task<CartDto> GetCartAsync(int customerId)
+        {
+            var cartOrder = await _context.Orders
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.Product)
+                .FirstOrDefaultAsync(o => o.CustomerID == customerId && o.Status == "Cart");
+
+            if (cartOrder == null)
+                return new CartDto { Items = new List<CartItemDto>() };
+
+            return new CartDto
+            {
+                OrderId = cartOrder.OrderID,
+                Items = cartOrder.OrderItems.Select(oi => new CartItemDto
+                {
+                    ProductId = oi.ProductID,
+                    ProductName = oi.Product.Name,
+                    Quantity = oi.Quantity,
+                    Price = oi.Product.Price
+                }).ToList()
+            };
+        }
+
+
+        public async Task AddToCartAsync(int customerId, int productId, int quantity)
+        {
+            var product = await _context.Products.FindAsync(productId);
+            if (product == null)
+                throw new Exception("Product not found");
+
+            var cartOrder = await _context.Orders
+                .Include(o => o.OrderItems)
+                .FirstOrDefaultAsync(o => o.CustomerID == customerId && o.Status == "Cart");
+
+            if (cartOrder == null)
+            {
+                cartOrder = new Order
+                {
+                    CustomerID = customerId,
+                    Status = "Cart",
+                    TotalAmount = 0,
+                    OrderItems = new List<OrderItem>()
+                };
+
+                _context.Orders.Add(cartOrder);
+            }
+
+            var existingItem = cartOrder.OrderItems
+                .FirstOrDefault(i => i.ProductID == productId);
+
+            if (existingItem != null)
+            {
+                existingItem.Quantity += quantity;
+            }
+            else
+            {
+                cartOrder.OrderItems.Add(new OrderItem
+                {
+                    ProductID = productId,
+                    Quantity = quantity
+                });
+            }
+            cartOrder.TotalAmount = cartOrder.OrderItems
+                .Sum(i => i.Quantity * product.Price);
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<string> RemoveFromCartAsync(int customerId, int productId)
+        {
+            var cartOrder = await _context.Orders
+                .Include(o => o.OrderItems)
+                .ThenInclude(i => i.Product)
+                .FirstOrDefaultAsync(o => o.CustomerID == customerId && o.Status == "Cart");
+
+            if (cartOrder == null) 
+                return "Cart not found";
+
+            var item = cartOrder.OrderItems
+                .FirstOrDefault(i => i.ProductID == productId);
+
+            if (item != null)
+            {
+                cartOrder.OrderItems.Remove(item);
+                cartOrder.TotalAmount = cartOrder.OrderItems
+                    .Sum(i => i.Quantity * i.Product.Price);
+
+                await _context.SaveChangesAsync();
+                return "Item removed from cart.";
+            }
+            return "Item not found in cart.";
+        }
+
+        public async Task<string> CheckoutAsync(int customerId)
+        {
+            var cartOrder = await _context.Orders
+                .FirstOrDefaultAsync(o => o.CustomerID == customerId && o.Status == "Cart");
+
+            if (cartOrder == null || !cartOrder.OrderItems.Any())
+                throw new Exception("Cart is empty");
+
+            cartOrder.Status = "Placed";
+            cartOrder.OrderDate = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return "Checkout successful. Order ID: " + cartOrder.OrderID;
+        }
 
     }
 }

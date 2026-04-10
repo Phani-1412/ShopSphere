@@ -48,5 +48,25 @@ namespace ShopSphere.Controllers
 
             return Ok(result);
         }
+
+        //create get all shipments for logistics
+        [Authorize(Roles = "Logistics")]
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAllShipments()
+        {
+            var shipments = await _context.Shipments
+                .Select(s => new
+                {
+                    s.ShipmentID,
+                    s.OrderID,
+                    s.Carrier,
+                    s.TrackingNumber,
+                    s.DispatchDate,
+                    s.DeliveryDate,
+                    s.Status
+                }).ToListAsync();
+            return Ok(shipments);
+        }
+
     }
 }

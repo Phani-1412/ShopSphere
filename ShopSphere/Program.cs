@@ -47,13 +47,22 @@ builder.Services.AddTransient<ISellerStoreService, SellerStoreService>();
 builder.Services.AddTransient<ICommissionService, CommissionService>();
 builder.Services.AddTransient<IPolicyService, PolicyService>();
 
-builder.Services.AddControllers();
-
+builder.Services.AddControllers(); 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngular",
+    policy =>
+    {
+        policy.AllowAnyOrigin()
+      .AllowAnyHeader()
+      .AllowAnyMethod();
+    });
+});
 var app = builder.Build();
-
 // Configure the HTTP request pipeline.
-
 app.UseHttpsRedirection();
+app.UseCors("AllowAngular");
+app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 

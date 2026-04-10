@@ -45,5 +45,13 @@ namespace ShopSphere.Controllers
             var products = await _service.GetAllProductsAsync();
             return Ok(products);
         }
+
+        [Authorize(Roles = "Customer")]
+        [HttpGet]
+        public async Task<IActionResult> GetProductsByCategory([FromQuery] int categoryId)
+        {
+            var products = await _service.GetProductsByCategoryAsync(categoryId);
+            return Ok(products);
+        }
     }
 }

@@ -1,4 +1,6 @@
-﻿using ShopSphere.DTO;
+﻿using Microsoft.AspNetCore.Mvc;
+using ShopSphere.DTO;
+using ShopSphere.Models;
 
 namespace ShopSphere.Services
 {
@@ -6,6 +8,6 @@ namespace ShopSphere.Services
     {
         Task<ProductResponseDto> CreateProductAsync(int userId, CreateProductDto dto);
         Task<IEnumerable<ProductResponseDto>> GetAllProductsAsync();
-
+        Task<IActionResult> GetProductsByCategoryAsync(int categoryId);
     }
 }

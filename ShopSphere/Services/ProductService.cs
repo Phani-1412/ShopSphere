@@ -2,6 +2,7 @@
 using ShopSphere.DTO;
 using ShopSphere.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc;
 
 namespace ShopSphere.Services
 {
@@ -30,6 +31,9 @@ namespace ShopSphere.Services
 
             if (store == null)
                 throw new Exception("Store not found or does not belong to you.");
+
+            if(store.Status != "Active")
+                throw new Exception("The store is not active. Please activate your store before adding products.");
 
             var existingSku= await _context.Products
                 .AnyAsync(p => p.SKU == dto.SKU);
@@ -65,7 +69,8 @@ namespace ShopSphere.Services
         public async Task<IEnumerable<ProductResponseDto>> GetAllProductsAsync()
         {
             return await _context.Products
-                .Where(p => p.Status == "Active")
+                .Include(p=>p.Store)
+                .Where(p => p.Status == "Active" && p.Store.Status == "Active")
                 .Select(p => new ProductResponseDto
                 {
                     ProductID = p.ProductID,
@@ -76,5 +81,21 @@ namespace ShopSphere.Services
                 }).ToListAsync();
         }
 
+        public async Task<IActionResult> GetProductsByCategoryAsync(int categoryId)
+        {
+            var products = await _context.Products
+                .Include(p => p.Store)
+                .Where(p => p.CategoryID == categoryId && p.Status == "Active" && p.Store.Status == "Active")
+                .Select(p => new ProductResponseDto
+                {
+                    ProductID = p.ProductID,
+                    Name = p.Name,
+                    Price = p.Price,
+                    SKU = p.SKU,
+                    StoreID = p.StoreID
+                }).ToListAsync();
+
+            return new OkObjectResult(products);
+        }
     }
 }

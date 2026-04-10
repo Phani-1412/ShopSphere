@@ -99,5 +99,60 @@ namespace ShopSphere.Controllers
                 .ToListAsync();
             return Ok(orders);
         }
+
+        [Authorize(Roles = "Customer")]
+        [HttpPost("cart/checkout")]
+        public async Task<IActionResult> Checkout()
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            await _service.CheckoutAsync(userId);
+
+            return Ok("Checkout successful");
+        }
+
+
+        [Authorize(Roles = "Customer")]
+        [HttpDelete("cart/remove/{productId}")]
+        public async Task<IActionResult> RemoveFromCart(int productId)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            await _service.RemoveFromCartAsync(userId, productId);
+
+            return Ok("Item removed");
+        }
+
+
+        [Authorize(Roles = "Customer")]
+        [HttpGet("cart")]
+        public async Task<IActionResult> GetCart()
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            var cart = await _service.GetCartAsync(userId);
+
+            if (cart == null || cart.Items.Count == 0)
+                return Ok(new { message = "Cart is empty" });
+
+            return Ok(cart);
+        }
+
+        [Authorize(Roles = "Customer")]
+        [HttpPost("cart/add")]
+        public async Task<IActionResult> AddToCart([FromBody] CartItemDto dto)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            if (dto.ProductId <= 0 || dto.Quantity <= 0)
+                return BadRequest("Invalid product or quantity");
+
+            await _service.AddToCartAsync(userId, dto.ProductId, dto.Quantity);
+
+            return Ok("Item added to cart");
+        }
+
+
+
     }
 }

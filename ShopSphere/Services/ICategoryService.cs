@@ -6,6 +6,6 @@ namespace ShopSphere.Services
     public interface ICategoryService
     {
         Task<string> CreateCategoryAsync(CreateCategoryDto dto);
-        Task<IEnumerable<Category>> GetAllAsync();
+        Task<IEnumerable<CategoryResponseDto>> GetAllAsync();
     }
 }

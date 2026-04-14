@@ -28,11 +28,25 @@ namespace ShopSphere.Services
             return "Category created.";
         }
 
-        public async Task<IEnumerable<Category>> GetAllAsync()
+        public async Task<IEnumerable<CategoryResponseDto>> GetAllAsync()
         {
             return await _context.Categories
-                .Include(c => c.SubCategories)
+                .Select(c => new CategoryResponseDto
+                {
+                    CategoryID = c.CategoryID,
+                    Name = c.Name,
+                    ParentCategoryID = c.ParentCategoryID,
+                    ParentCategoryName = c.ParentCategory != null ? c.ParentCategory.Name : null,
+                    SubCategories = c.SubCategories.Select(sc => new CategoryResponseDto
+                    {
+                        CategoryID = sc.CategoryID,
+                        Name = sc.Name,
+                        ParentCategoryID = sc.ParentCategoryID,
+                        ParentCategoryName = sc.ParentCategory != null ? sc.ParentCategory.Name : null
+                    }).ToList()
+                })
                 .ToListAsync();
         }
+
     }
 }

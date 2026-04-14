@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace ShopSphere.Models
 {
@@ -11,6 +12,7 @@ namespace ShopSphere.Models
 
         public int? ParentCategoryID { get; set; }
 
+        [JsonIgnore]
         public Category ParentCategory { get; set; }
 
         public ICollection<Category> SubCategories { get; set; } = new List<Category>();

@@ -29,7 +29,7 @@ namespace ShopSphere.Controllers
         // /api/category
         public async Task<IActionResult> GetAll()
         {
-            var categories = await _service.GetAllAsync();
+            var categories = await _service.GetAllAsync(); 
             return Ok(categories);
         }
     }

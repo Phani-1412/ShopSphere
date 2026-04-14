@@ -10,7 +10,7 @@ namespace ShopSphere.Services
         private readonly ApplicationDbContext _context;
         public SellerStoreService(ApplicationDbContext context)
         {
-            _context = context; // 3. Yahan assign karna zaroori hai!		
+            _context = context;		
         }
 
         public async Task<string> CreateSellerStoreAsync(int sellerId, CreateSellerStoreAsyncDTO dto)

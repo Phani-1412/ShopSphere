@@ -39,7 +39,17 @@ namespace ShopSphere.Services
 
             await _context.SaveChangesAsync();
 
+            await _context.Notifications.AddAsync(new Notification
+            {
+                UserID = customerId,
+                Message = $"Return request for Order #{dto.OrderID} submitted successfully!",
+                Category = "Return",
+                Status = "Unread",
+                CreatedDate = DateTime.UtcNow
+            });
+
             return "Return request submitted.";
+
         }
 
         public async Task<string> ProcessReturnAsync(int returnId, bool approve, int adminUserId)

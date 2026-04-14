@@ -14,6 +14,7 @@ namespace ShopSphere.Services
             _context = context;
         }
 
+
         public async Task<string> CreatePaymentAsync(int customerId, CreatePaymentDto dto)
         {
             var order = await _context.Orders
@@ -39,9 +40,19 @@ namespace ShopSphere.Services
 
             order.Status = "Paid";
 
+            await _context.Notifications.AddAsync(new Notification
+            {
+                UserID = customerId,
+                Message = $"Payment of ₹{dto.Amount} for Order #{dto.OrderID} was successful!",
+                Category = "Payment",
+                Status = "Unread",
+                CreatedDate = DateTime.UtcNow
+            });
+
             await _context.SaveChangesAsync();
 
             return "Payment successful. Order marked as Paid.";
         }
+
     }
 }

@@ -12,8 +12,8 @@ using ShopSphere.Data;
 namespace ShopSphere.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260406140808_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260414102038_RemoveStoreID1")]
+    partial class RemoveStoreID1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -343,6 +343,9 @@ namespace ShopSphere.Migrations
                     b.Property<int>("SellerID")
                         .HasColumnType("int");
 
+                    b.Property<int?>("SellerID1")
+                        .HasColumnType("int");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -355,6 +358,8 @@ namespace ShopSphere.Migrations
                     b.HasIndex("CategoryID");
 
                     b.HasIndex("SellerID");
+
+                    b.HasIndex("SellerID1");
 
                     b.HasIndex("StoreID");
 
@@ -662,7 +667,7 @@ namespace ShopSphere.Migrations
                     b.HasOne("ShopSphere.Models.Product", "Product")
                         .WithMany("OrderItems")
                         .HasForeignKey("ProductID")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Order");
@@ -690,15 +695,19 @@ namespace ShopSphere.Migrations
                         .IsRequired();
 
                     b.HasOne("ShopSphere.Models.Seller", "Seller")
-                        .WithMany("Products")
+                        .WithMany()
                         .HasForeignKey("SellerID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("ShopSphere.Models.Seller", null)
+                        .WithMany("Products")
+                        .HasForeignKey("SellerID1");
+
                     b.HasOne("ShopSphere.Models.SellerStore", "Store")
                         .WithMany("Products")
                         .HasForeignKey("StoreID")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Category");

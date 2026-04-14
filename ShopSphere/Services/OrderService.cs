@@ -247,6 +247,7 @@ namespace ShopSphere.Services
         public async Task<string> CheckoutAsync(int customerId)
         {
             var cartOrder = await _context.Orders
+                .Include(o => o.OrderItems)
                 .FirstOrDefaultAsync(o => o.CustomerID == customerId && o.Status == "Cart");
 
             if (cartOrder == null || !cartOrder.OrderItems.Any())
@@ -255,9 +256,19 @@ namespace ShopSphere.Services
             cartOrder.Status = "Placed";
             cartOrder.OrderDate = DateTime.UtcNow;
 
+            await _context.Notifications.AddAsync(new Notification
+            {
+                UserID = customerId,
+                Message = $"Your order #{cartOrder.OrderID} has been placed successfully!",
+                Category = "Order",
+                Status = "Unread",
+                CreatedDate = DateTime.UtcNow
+            });
+
             await _context.SaveChangesAsync();
             return "Checkout successful. Order ID: " + cartOrder.OrderID;
         }
+
 
     }
 }

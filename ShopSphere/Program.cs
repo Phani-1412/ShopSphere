@@ -60,7 +60,7 @@ builder.Services.AddCors(options =>
 });
 var app = builder.Build();
 // Configure the HTTP request pipeline.
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseCors("AllowAngular");
 app.UseRouting();
 app.UseAuthentication();

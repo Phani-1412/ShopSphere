@@ -151,5 +151,27 @@ namespace ShopSphere.Controllers
 
             return Ok("Item added to cart");
         }
+
+        [Authorize(Roles = "Customer")]
+        [HttpPost("rate-store/{storeId}")]
+        public async Task<IActionResult> RateStore(int storeId, [FromBody] decimal rating)
+        {
+            if (rating < 1 || rating > 5)
+                return BadRequest("Rating must be between 1 and 5.");
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var hasPurchased = await _context.OrderItems
+                .AnyAsync(oi => oi.Order.CustomerID == userId &&
+                                oi.Product.StoreID == storeId &&
+                                oi.Order.Status == "Delivered");
+
+            if (!hasPurchased)
+                return BadRequest("You can only rate stores after receiving a delivered order.");
+            var store = await _context.SellerStores.FindAsync(storeId);
+            if (store == null) return NotFound("Store not found");
+            store.Rating = (store.Rating == 0) ? rating : (store.Rating + rating) / 2;
+
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Thank you for your rating!", newRating = store.Rating });
+        }
     }
 }

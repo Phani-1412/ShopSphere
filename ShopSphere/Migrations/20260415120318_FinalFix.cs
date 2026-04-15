@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ShopSphere.Migrations
 {
     /// <inheritdoc />
-    public partial class FinalS : Migration
+    public partial class FinalFix : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -333,8 +333,7 @@ namespace ShopSphere.Migrations
                     SKU = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CategoryID = table.Column<int>(type: "int", nullable: false),
-                    StoreID = table.Column<int>(type: "int", nullable: false),
-                    SellerID1 = table.Column<int>(type: "int", nullable: true)
+                    StoreID = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -349,16 +348,11 @@ namespace ShopSphere.Migrations
                         name: "FK_Products_SellerStores_StoreID",
                         column: x => x.StoreID,
                         principalTable: "SellerStores",
-                        principalColumn: "StoreID");
+                        principalColumn: "StoreID",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Products_Sellers_SellerID",
                         column: x => x.SellerID,
-                        principalTable: "Sellers",
-                        principalColumn: "SellerID",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Products_Sellers_SellerID1",
-                        column: x => x.SellerID1,
                         principalTable: "Sellers",
                         principalColumn: "SellerID");
                 });
@@ -498,11 +492,6 @@ namespace ShopSphere.Migrations
                 name: "IX_Products_SellerID",
                 table: "Products",
                 column: "SellerID");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Products_SellerID1",
-                table: "Products",
-                column: "SellerID1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Products_StoreID",

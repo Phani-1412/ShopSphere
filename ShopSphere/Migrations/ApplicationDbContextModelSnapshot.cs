@@ -340,9 +340,6 @@ namespace ShopSphere.Migrations
                     b.Property<int>("SellerID")
                         .HasColumnType("int");
 
-                    b.Property<int?>("SellerID1")
-                        .HasColumnType("int");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -355,8 +352,6 @@ namespace ShopSphere.Migrations
                     b.HasIndex("CategoryID");
 
                     b.HasIndex("SellerID");
-
-                    b.HasIndex("SellerID1");
 
                     b.HasIndex("StoreID");
 
@@ -692,19 +687,15 @@ namespace ShopSphere.Migrations
                         .IsRequired();
 
                     b.HasOne("ShopSphere.Models.Seller", "Seller")
-                        .WithMany()
-                        .HasForeignKey("SellerID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ShopSphere.Models.Seller", null)
                         .WithMany("Products")
-                        .HasForeignKey("SellerID1");
+                        .HasForeignKey("SellerID")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
 
                     b.HasOne("ShopSphere.Models.SellerStore", "Store")
                         .WithMany("Products")
                         .HasForeignKey("StoreID")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Category");

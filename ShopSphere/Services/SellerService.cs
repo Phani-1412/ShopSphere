@@ -21,21 +21,42 @@ namespace ShopSphere.Services
             var user = await _context.Users.FindAsync(userId);
 
             if (user == null || user.Role != "Seller")
-                return "Only users with Seller role can create seller profile.";
+                return "Only users with Seller role can create a seller profile.";
 
             if (await _context.Sellers.AnyAsync(s => s.UserID == userId))
                 return "Seller profile already exists.";
+            using var transaction = await _context.Database.BeginTransactionAsync();
 
-            var seller = new Seller
+            try
             {
-                UserID = userId,
-                StoreName = dto.StoreName
-            };
+                var seller = new Seller
+                {
+                    UserID = userId,
+                    StoreName = dto.StoreName,
+                    ComplianceStatus = "Pending"
+                };
 
-            _context.Sellers.Add(seller);
-            await _context.SaveChangesAsync();
+                _context.Sellers.Add(seller);
+                await _context.SaveChangesAsync();
+                var initialStore = new SellerStore
+                {
+                    SellerID = seller.SellerID,
+                    CategoryFocus = "General",
+                    Rating = 0,
+                    Status = "Pending" 
+                };
 
-            return "Seller profile created. Awaiting admin approval.";
+                _context.SellerStores.Add(initialStore);
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return "Seller profile and initial store created. Awaiting admin approval.";
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                return "An error occurred during registration. Please try again.";
+            }
         }
 
         public async Task<IEnumerable<SellerResponseDto>> GetAllSellersAsync()
@@ -51,18 +72,28 @@ namespace ShopSphere.Services
 
         public async Task<bool> ApproveSellerAsync(int sellerId, int adminUserId)
         {
-            var seller = await _context.Sellers.FindAsync(sellerId);
+            var seller = await _context.Sellers
+                .Include(s => s.SellerStores)
+                .FirstOrDefaultAsync(s => s.SellerID == sellerId);
 
             if (seller == null)
                 return false;
-
             seller.ComplianceStatus = "Approved";
             seller.RejectionReason = null;
             seller.ReviewedByAdminId = adminUserId;
+            if (seller.SellerStores != null)
+            {
+                foreach (var store in seller.SellerStores)
+                {
+                    if (store.Status == "Pending")
+                    {
+                        store.Status = "Active";
+                    }
+                }
+            }
 
             await _context.SaveChangesAsync();
             return true;
-
         }
 
         public async Task<SellerResponseDto> GetSellerByUserIdAsync(int userId)

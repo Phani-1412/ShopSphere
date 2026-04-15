@@ -70,12 +70,13 @@ namespace ShopSphere.Services
         public async Task<IEnumerable<object>> GetSellerOrdersAsync(int sellerId)
         {
             return await _context.OrderItems
-                .Where(oi => _context.Products
-                    .Any(p => p.ProductID == oi.ProductID && p.SellerID == sellerId))
+                .Include(oi => oi.Product)
+                .Where(oi => oi.Product.SellerID == sellerId) 
                 .Select(oi => new
                 {
                     oi.OrderID,
                     oi.ProductID,
+                    ProductName = oi.Product.Name, // Added for UI
                     oi.Quantity,
                     oi.UnitPrice,
                     OrderStatus = _context.Orders

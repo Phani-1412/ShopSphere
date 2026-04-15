@@ -53,19 +53,17 @@ namespace ShopSphere.Controllers
         }
 
         [Authorize(Roles = "Seller")]
-        // GET: api/SellerStore/my-stores    
         [HttpGet("my-stores")]
         public async Task<IActionResult> GetAllMyStores()
-
         {
-
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var seller = await _context.Sellers.FirstOrDefaultAsync(s => s.UserID == userId);
 
-
-            var stores = await _sellerStoreService.GetAllSellersStoresAsync(userId);
+            if (seller == null)
+                return BadRequest("Seller profile not found.");
+            var stores = await _sellerStoreService.GetAllSellersStoresAsync(seller.SellerID);
 
             return Ok(stores);
-
         }
 
 

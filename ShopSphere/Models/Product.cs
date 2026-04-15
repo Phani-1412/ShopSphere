@@ -18,7 +18,6 @@ namespace ShopSphere.Models
 
         public string Status { get; set; } = "Active";
 
-        [ForeignKey("SellerID")]
         public Seller Seller { get; set; }
         public int CategoryID { get; set; }
         [ForeignKey("CategoryID")]

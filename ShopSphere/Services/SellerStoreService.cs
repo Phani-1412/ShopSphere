@@ -34,10 +34,7 @@ namespace ShopSphere.Services
 
             var store = await _context.SellerStores.FirstOrDefaultAsync(s => s.StoreID == storeId && s.SellerID == sellerId);
 
-            if (store == null)
-            {
-                return "Store not found or you do not have permission to delete it.";
-            }
+            if (storeId == 0) return "Cannot delete the primary store account.";
             _context.SellerStores.Remove(store);
 
             await _context.SaveChangesAsync();
@@ -47,26 +44,23 @@ namespace ShopSphere.Services
 
         public async Task<IEnumerable<SellerStoreListResponseDto>> GetAllSellersStoresAsync(int sellerId)
         {
-
-            return await _context.SellerStores.Where(s => s.SellerID == sellerId).Select(s => new SellerStoreListResponseDto
-            {
-                StoreId = s.StoreID,
-                CategoryFocus = s.CategoryFocus,
-                Rating = s.Rating,
-                Status = s.Status
-            })
-            .ToListAsync();
-
+            return await _context.SellerStores
+                .Where(s => s.SellerID == sellerId)
+                .Select(s => new SellerStoreListResponseDto
+                {
+                    StoreId = s.StoreID,
+                    CategoryFocus = s.CategoryFocus,
+                    Rating = s.Rating,
+                    Status = s.Status
+                })
+                .ToListAsync();
         }
 
         public async Task<string> UpdateStoreStatusAsync(int sellerId, int storeId, UpdateStoreStatusAsyncDTO dto)
         {
             var store = await _context.SellerStores.FirstOrDefaultAsync(s => s.StoreID == storeId && s.SellerID == sellerId);
 
-            if (store == null)
-            {
-                return "Store not found or you do not have permission to update its status.";
-            }
+            if (storeId == 0) return "Cannot update the primary store status from this endpoint. Admins must approve it.";
 
             store.Status = dto.Status;
 

@@ -7,7 +7,7 @@ namespace ShopSphere.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    
     public class CommissionController : ControllerBase
     {
         private readonly ICommissionService _service;
@@ -18,6 +18,7 @@ namespace ShopSphere.Controllers
         }
 
         // POST: api/commission
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> SetCommission([FromBody] Commission commission)
         {

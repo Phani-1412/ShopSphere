@@ -151,8 +151,5 @@ namespace ShopSphere.Controllers
 
             return Ok("Item added to cart");
         }
-
-
-
     }
 }

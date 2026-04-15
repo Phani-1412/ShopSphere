@@ -12,8 +12,8 @@ using ShopSphere.Data;
 namespace ShopSphere.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260414102038_RemoveStoreID1")]
-    partial class RemoveStoreID1
+    [Migration("20260415041345_FinalS")]
+    partial class FinalS
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

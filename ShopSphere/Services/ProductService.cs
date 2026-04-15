@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ShopSphere.Services
 {
-    public class ProductService: IProductService
+    public class ProductService : IProductService
     {
         private readonly ApplicationDbContext _context;
 
@@ -14,33 +14,32 @@ namespace ShopSphere.Services
         {
             _context = context;
         }
+        public async Task<IEnumerable<ProductResponseDto>> GetProductsBySellerAsync(int userId)
+        {
+            return await _context.Products
+                .Where(p => p.Seller.UserID == userId)
+                .Select(p => new ProductResponseDto
+                {
+                    ProductID = p.ProductID,
+                    Name = p.Name,
+                    Price = p.Price,
+                    SKU = p.SKU,
+                    StoreID = p.StoreID
+                }).ToListAsync();
+        }
 
         public async Task<ProductResponseDto> CreateProductAsync(int userId, CreateProductDto dto)
         {
             var seller = await _context.Sellers
                 .FirstOrDefaultAsync(s => s.UserID == userId);
 
-            if (seller == null)
-                throw new Exception("Seller profile not found.");
-
-            if (seller.ComplianceStatus != "Approved")
-                throw new Exception("Your seller profile is not approved. Please complete the compliance process.");
+            if (seller == null) throw new Exception("Seller profile not found.");
+            if (seller.ComplianceStatus != "Approved") throw new Exception("Profile not approved.");
 
             var store = await _context.SellerStores
                 .FirstOrDefaultAsync(s => s.StoreID == dto.StoreId && s.SellerID == seller.SellerID);
 
-            if (store == null)
-                throw new Exception("Store not found or does not belong to you.");
-
-            if(store.Status != "Active")
-                throw new Exception("The store is not active. Please activate your store before adding products.");
-
-            var existingSku= await _context.Products
-                .AnyAsync(p => p.SKU == dto.SKU);
-
-            if(existingSku)
-                throw new Exception("A product with the same SKU already exists. Please choose a different SKU.");
-
+            if (store == null) throw new Exception("Store not found or unauthorized.");
 
             var product = new Product
             {
@@ -49,7 +48,7 @@ namespace ShopSphere.Services
                 Name = dto.Name,
                 Price = dto.Price,
                 SKU = dto.SKU,
-                CategoryID=dto.CategoryId,
+                CategoryID = dto.CategoryId,
                 Status = "Active"
             };
 
@@ -69,7 +68,7 @@ namespace ShopSphere.Services
         public async Task<IEnumerable<ProductResponseDto>> GetAllProductsAsync()
         {
             return await _context.Products
-                .Include(p=>p.Store)
+                .Include(p => p.Store)
                 .Where(p => p.Status == "Active" && p.Store.Status == "Active")
                 .Select(p => new ProductResponseDto
                 {
@@ -84,8 +83,7 @@ namespace ShopSphere.Services
         public async Task<IActionResult> GetProductsByCategoryAsync(int categoryId)
         {
             var products = await _context.Products
-                .Include(p => p.Store)
-                .Where(p => p.CategoryID == categoryId && p.Status == "Active" && p.Store.Status == "Active")
+                .Where(p => p.CategoryID == categoryId && p.Status == "Active")
                 .Select(p => new ProductResponseDto
                 {
                     ProductID = p.ProductID,

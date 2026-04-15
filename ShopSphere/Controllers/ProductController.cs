@@ -16,15 +16,25 @@ namespace ShopSphere.Controllers
         {
             _service = service;
         }
+        [Authorize(Roles = "Seller")]
+        [HttpGet("my-products")]
+        public async Task<IActionResult> GetMyProducts()
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            // The service should be updated to filter by userId/sellerId
+            var products = await _service.GetProductsBySellerAsync(userId);
+            return Ok(products);
+        }
 
         [Authorize(Roles = "Seller")]
         [HttpPost("create")]
-        // /api/product/create
         public async Task<IActionResult> Create(CreateProductDto dto)
         {
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdClaim))
                 return Unauthorized("User ID not found in token.");
+
             var userId = int.Parse(userIdClaim);
 
             try
@@ -37,9 +47,9 @@ namespace ShopSphere.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
         [AllowAnonymous]
         [HttpGet("all")]
-        // /api/product/all
         public async Task<IActionResult> GetAllProducts()
         {
             var products = await _service.GetAllProductsAsync();

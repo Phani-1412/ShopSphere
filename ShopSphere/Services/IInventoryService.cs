@@ -6,5 +6,6 @@ namespace ShopSphere.Services
     {
         Task<string> CreateOrUpdateInventoryAsync(int userId, CreateInventoryDto dto);
         Task<InventoryResponseDto> GetInventoryByProductAsync(int productId);
+        Task<InventoryResponseDto> GetInventoryByProductSecureAsync(int userId, int productId);
     }
 }

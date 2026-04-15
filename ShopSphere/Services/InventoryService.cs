@@ -22,6 +22,7 @@ namespace ShopSphere.Services
             if (seller == null)
                 return "Seller profile not found.";
 
+            // Verification: Ensure the Product actually belongs to this specific Seller
             var product = await _context.Products
                 .FirstOrDefaultAsync(p => p.ProductID == dto.ProductID && p.SellerID == seller.SellerID);
 
@@ -40,7 +41,6 @@ namespace ShopSphere.Services
                     AvailableQuantity = dto.AvailableQuantity,
                     ReorderThreshold = dto.ReorderThreshold
                 };
-
                 _context.Inventories.Add(inventory);
             }
             else
@@ -50,13 +50,23 @@ namespace ShopSphere.Services
             }
 
             await _context.SaveChangesAsync();
-
             return "Inventory updated successfully.";
+        }
+        public async Task<InventoryResponseDto> GetInventoryByProductSecureAsync(int userId, int productId)
+        {
+            return await _context.Inventories
+                .Where(i => i.ProductID == productId && i.Product.Seller.UserID == userId)
+                .Select(i => new InventoryResponseDto
+                {
+                    ProductID = i.ProductID,
+                    AvailableQuantity = i.AvailableQuantity,
+                    ReorderThreshold = i.ReorderThreshold
+                }).FirstOrDefaultAsync();
         }
 
         public async Task<InventoryResponseDto> GetInventoryByProductAsync(int productId)
         {
-            var inventory = await _context.Inventories
+            return await _context.Inventories
                 .Where(i => i.ProductID == productId)
                 .Select(i => new InventoryResponseDto
                 {
@@ -64,8 +74,6 @@ namespace ShopSphere.Services
                     AvailableQuantity = i.AvailableQuantity,
                     ReorderThreshold = i.ReorderThreshold
                 }).FirstOrDefaultAsync();
-
-            return inventory;
         }
     }
 }

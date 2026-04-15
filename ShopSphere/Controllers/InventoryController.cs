@@ -19,21 +19,30 @@ namespace ShopSphere.Controllers
 
         [Authorize(Roles = "Seller")]
         [HttpPost]
-        // /api/inventory
         public async Task<IActionResult> CreateOrUpdate(CreateInventoryDto dto)
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null) return Unauthorized();
 
+            var userId = int.Parse(userIdClaim);
             var result = await _service.CreateOrUpdateInventoryAsync(userId, dto);
 
             return Ok(result);
         }
 
+        [Authorize(Roles = "Seller")]
         [HttpGet("{productId}")]
-        // /api/inventory/{productId}
         public async Task<IActionResult> Get(int productId)
         {
-            var inventory = await _service.GetInventoryByProductAsync(productId);
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null) return Unauthorized();
+
+            var userId = int.Parse(userIdClaim);
+            var inventory = await _service.GetInventoryByProductSecureAsync(userId, productId);
+
+            if (inventory == null)
+                return NotFound("Inventory not found or you do not have permission to view it.");
+
             return Ok(inventory);
         }
     }

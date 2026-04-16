@@ -28,41 +28,36 @@ namespace ShopSphere.Services
                 }).ToListAsync();
         }
 
-        public async Task<ProductResponseDto> CreateProductAsync(int userId, CreateProductDto dto)
+        public async Task<string> CreateProductAsync(int userId, CreateProductDto dto)
         {
+            // 1. Find the Seller
             var seller = await _context.Sellers
                 .FirstOrDefaultAsync(s => s.UserID == userId);
 
             if (seller == null) throw new Exception("Seller profile not found.");
-            if (seller.ComplianceStatus != "Approved") throw new Exception("Profile not approved.");
 
-            var store = await _context.SellerStores
-                .FirstOrDefaultAsync(s => s.StoreID == dto.StoreId && s.SellerID == seller.SellerID);
+            // 2. Find the Seller's primary/first store
+            var baseStore = await _context.SellerStores
+                .FirstOrDefaultAsync(st => st.SellerID == seller.SellerID);
 
-            if (store == null) throw new Exception("Store not found or unauthorized.");
+            if (baseStore == null) throw new Exception("No store found for this seller.");
 
+            // 3. Create the product using the baseStore.StoreID
             var product = new Product
             {
-                SellerID = seller.SellerID,
-                StoreID = dto.StoreId,
                 Name = dto.Name,
                 Price = dto.Price,
                 SKU = dto.SKU,
                 CategoryID = dto.CategoryId,
+                SellerID = seller.SellerID,
+                StoreID = baseStore.StoreID,
                 Status = "Active"
             };
 
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
-            return new ProductResponseDto
-            {
-                ProductID = product.ProductID,
-                Name = product.Name,
-                Price = product.Price,
-                SKU = product.SKU,
-                StoreID = product.StoreID
-            };
+            return "Product added successfully!";
         }
 
         public async Task<IEnumerable<ProductResponseDto>> GetAllProductsAsync()

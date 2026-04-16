@@ -8,7 +8,7 @@ namespace ShopSphere.Services
     {
         Task<ProductResponseDto> CreateProductAsync(int userId, CreateProductDto dto);
         Task<IEnumerable<ProductResponseDto>> GetAllProductsAsync();
-        Task<IActionResult> GetProductsByCategoryAsync(int categoryId);
+        Task<IEnumerable<ProductResponseDto>> GetProductsByCategoryAsync(int categoryId);
         Task<IEnumerable<ProductResponseDto>> GetProductsBySellerAsync(int userId);
     }
 }

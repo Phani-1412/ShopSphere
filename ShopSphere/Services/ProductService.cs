@@ -80,9 +80,9 @@ namespace ShopSphere.Services
                 }).ToListAsync();
         }
 
-        public async Task<IActionResult> GetProductsByCategoryAsync(int categoryId)
+        public async Task<IEnumerable<ProductResponseDto>> GetProductsByCategoryAsync(int categoryId)
         {
-            var products = await _context.Products
+            return await _context.Products
                 .Where(p => p.CategoryID == categoryId && p.Status == "Active")
                 .Select(p => new ProductResponseDto
                 {
@@ -92,8 +92,6 @@ namespace ShopSphere.Services
                     SKU = p.SKU,
                     StoreID = p.StoreID
                 }).ToListAsync();
-
-            return new OkObjectResult(products);
         }
     }
 }

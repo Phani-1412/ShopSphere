@@ -71,15 +71,16 @@ namespace ShopSphere.Services
         {
             return await _context.OrderItems
                 .Include(oi => oi.Product)
-                .Where(oi => oi.Product.SellerID == sellerId) 
+                .Where(oi => oi.Product.SellerID == sellerId)
                 .Select(oi => new
                 {
-                    oi.OrderID,
-                    oi.ProductID,
-                    ProductName = oi.Product.Name, // Added for UI
-                    oi.Quantity,
-                    oi.UnitPrice,
-                    OrderStatus = _context.Orders
+                    orderID = oi.OrderID,
+                    productID = oi.ProductID,
+                    productName = oi.Product.Name,
+                    quantity = oi.Quantity,
+                    unitPrice = oi.UnitPrice > 0 ? oi.UnitPrice : oi.Product.Price, // Fallback if UnitPrice is 0
+                    totalAmount = (oi.UnitPrice > 0 ? oi.UnitPrice : oi.Product.Price) * oi.Quantity,
+                    orderStatus = _context.Orders
                         .Where(o => o.OrderID == oi.OrderID)
                         .Select(o => o.Status)
                         .FirstOrDefault()
@@ -211,7 +212,8 @@ namespace ShopSphere.Services
                 cartOrder.OrderItems.Add(new OrderItem
                 {
                     ProductID = productId,
-                    Quantity = quantity
+                    Quantity = quantity,
+                    UnitPrice = product.Price
                 });
             }
             cartOrder.TotalAmount = cartOrder.OrderItems

@@ -42,19 +42,21 @@ namespace ShopSphere.API.Services
             return "User Registered Successfully";
         }
 
-        public async Task<string> LoginAsync(LoginDto model)
+        public async Task<object> LoginAsync(LoginDto model)
         {
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Email == model.Email);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
+            if (user == null || HashPassword(model.Password) != user.PasswordHash)
+                return new { error = "Invalid credentials" };
 
-            if (user == null)
-                return "Invalid credentials";
-
-            if (HashPassword(model.Password) != user.PasswordHash)
-                return "Invalid credentials";
-
-            return GenerateJwtToken(user);
+            return new
+            {
+                token = GenerateJwtToken(user),
+                role = user.Role,
+                userId = user.UserID,
+                name = user.Name
+            };
         }
+
 
         private string GenerateJwtToken(User user)
         {

@@ -19,45 +19,24 @@ namespace ShopSphere.Services
         public async Task<string> CreateSellerAsync(int userId, CreateSellerDto dto)
         {
             var user = await _context.Users.FindAsync(userId);
-
             if (user == null || user.Role != "Seller")
                 return "Only users with Seller role can create a seller profile.";
 
             if (await _context.Sellers.AnyAsync(s => s.UserID == userId))
                 return "Seller profile already exists.";
-            using var transaction = await _context.Database.BeginTransactionAsync();
 
-            try
+            var seller = new Seller
             {
-                var seller = new Seller
-                {
-                    UserID = userId,
-                    StoreName = dto.StoreName,
-                    ComplianceStatus = "Pending"
-                };
+                UserID = userId,
+                StoreName = dto.StoreName,
+                ComplianceStatus = "Approved"
+            };
 
-                _context.Sellers.Add(seller);
-                await _context.SaveChangesAsync();
-                var initialStore = new SellerStore
-                {
-                    SellerID = seller.SellerID,
-                    CategoryFocus = "General",
-                    Rating = 0,
-                    Status = "Pending" 
-                };
-
-                _context.SellerStores.Add(initialStore);
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
-
-                return "Seller profile and initial store created. Awaiting admin approval.";
-            }
-            catch (Exception)
-            {
-                await transaction.RollbackAsync();
-                return "An error occurred during registration. Please try again.";
-            }
+            _context.Sellers.Add(seller);
+            await _context.SaveChangesAsync();
+            return "Seller profile created. Please add stores for approval.";
         }
+
 
         public async Task<IEnumerable<SellerResponseDto>> GetAllSellersAsync()
         {

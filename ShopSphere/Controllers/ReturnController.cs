@@ -52,5 +52,24 @@ namespace ShopSphere.Controllers
                 .ToListAsync();
             return Ok(returns);
         }
+
+        [Authorize(Roles = "Seller")]
+        [HttpGet("seller-returns")]
+        public async Task<IActionResult> GetSellerReturns()
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var seller = await _context.Sellers.FirstOrDefaultAsync(s => s.UserID == userId);
+            if (seller == null) return BadRequest("Seller not found");
+
+            var returns = await _context.ReturnRequests
+                .Where(r => _context.OrderItems.Any(oi =>
+                    oi.OrderID == r.OrderID &&
+                    _context.Products.Any(p => p.ProductID == oi.ProductID && p.SellerID == seller.SellerID)))
+                .Select(r => new { r.ReturnID, r.OrderID, r.Reason, r.Status, r.RequestedDate })
+                .ToListAsync();
+
+            return Ok(returns);
+        }
+
     }
 }//comment

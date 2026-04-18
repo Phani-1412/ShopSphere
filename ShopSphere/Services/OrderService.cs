@@ -31,16 +31,25 @@ namespace ShopSphere.Services
                 throw new Exception("Insufficient stock.");
 
             // Reduce stock
-            inventory.AvailableQuantity -= dto.Quantity;   
+            inventory.AvailableQuantity -= dto.Quantity;
 
             var order = new Order
             {
                 CustomerID = customerId,
                 TotalAmount = product.Price * dto.Quantity,
-                Status = "Placed"
+                Status = "Placed",
+                OrderItems = new List<OrderItem> {
+                    new OrderItem {
+                        ProductID = dto.ProductID,
+                        Quantity = dto.Quantity,
+                        UnitPrice = product.Price
+                    }
+                }
             };
-
+            inventory.AvailableQuantity -= dto.Quantity;
             _context.Orders.Add(order);
+            await _context.SaveChangesAsync();
+
 
             var orderItem = new OrderItem
             {
@@ -105,12 +114,13 @@ namespace ShopSphere.Services
             var incomingStatus = newStatus.Trim().ToLower();
 
             var validTransitions = new Dictionary<string, List<string>>
-            {
-                { "placed", new List<string> { "paid", "cancelled" } },
-                {"paid",  new List<string> { "packed"}},
-                { "packed", new List<string> { "shipped" } },
-                { "shipped", new List<string> { "delivered" } }
-            };
+                {
+                    { "placed",   new List<string> { "paid", "cancelled" } },
+                    { "paid",     new List<string> { "packed", "cancelled" } },
+                    { "packed",   new List<string> { "shipped", "cancelled" } },
+                    { "shipped",  new List<string> { "delivered" } }
+                };
+
 
             if (!validTransitions.ContainsKey(currentStatus) ||
                 !validTransitions[currentStatus].Contains(incomingStatus))
@@ -120,6 +130,15 @@ namespace ShopSphere.Services
             await _context.SaveChangesAsync();
 
             return "Order status updated successfully.";
+            _context.Notifications.Add(new Notification
+            {
+                UserID = order.CustomerID,
+                Message = $"Your order #{order.OrderID} is now {incomingStatus}.",
+                Category = "Order",
+                Status = "Unread"
+            });
+            await _context.SaveChangesAsync();
+
         }
         public async Task<object> GetOrderDetailsAsync(int orderId)
         {
@@ -253,9 +272,13 @@ namespace ShopSphere.Services
                 .Include(o => o.OrderItems)
                 .FirstOrDefaultAsync(o => o.CustomerID == customerId && o.Status == "Cart");
 
-            if (cartOrder == null || !cartOrder.OrderItems.Any())
-                throw new Exception("Cart is empty");
-
+            foreach (var item in cartOrder.OrderItems)
+            {
+                var inv = await _context.Inventories.FirstOrDefaultAsync(i => i.ProductID == item.ProductID);
+                if (inv == null || inv.AvailableQuantity < item.Quantity)
+                    throw new Exception($"Insufficient stock for product {item.ProductID}");
+                inv.AvailableQuantity -= item.Quantity;
+            }
             cartOrder.Status = "Placed";
             cartOrder.OrderDate = DateTime.UtcNow;
 

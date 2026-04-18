@@ -43,24 +43,41 @@ namespace ShopSphere.Services
         public async Task<string> UpdateShipmentStatusAsync(int shipmentId, string status)
         {
             var shipment = await _context.Shipments.FindAsync(shipmentId);
-
             if (shipment == null)
                 return "Shipment not found.";
 
             shipment.Status = status;
 
-            if (status == "Delivered")
+            var order = await _context.Orders.FindAsync(shipment.OrderID);
+
+            if (status == "Shipped" && order != null)
+            {
+                order.Status = "Shipped";
+                _context.Notifications.Add(new Notification
+                {
+                    UserID = order.CustomerID,
+                    Message = $"Your order #{order.OrderID} has been shipped.",
+                    Category = "Shipment",
+                    Status = "Unread"
+                });
+            }
+            else if (status == "Delivered" && order != null)
             {
                 shipment.DeliveryDate = DateTime.UtcNow;
-
-                var order = await _context.Orders.FindAsync(shipment.OrderID);
-                if (order != null)
-                    order.Status = "Delivered";
+                order.Status = "Delivered";
+                _context.Notifications.Add(new Notification
+                {
+                    UserID = order.CustomerID,
+                    Message = $"Your order #{order.OrderID} has been delivered.",
+                    Category = "Shipment",
+                    Status = "Unread"
+                });
             }
+
             await _context.SaveChangesAsync();
             return "Shipment updated.";
-
         }
+
     }
 }
 

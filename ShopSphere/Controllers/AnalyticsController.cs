@@ -29,7 +29,7 @@ namespace ShopSphere.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "Operations")]
+        [Authorize(Roles = "Admin")]
         [HttpGet("orders-summary")]
         // /api/analytics/orders-summary
         public async Task<IActionResult> GetOrdersSummary()

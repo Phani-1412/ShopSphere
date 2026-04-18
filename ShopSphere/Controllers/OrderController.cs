@@ -173,5 +173,20 @@ namespace ShopSphere.Controllers
             await _context.SaveChangesAsync();
             return Ok(new { message = "Thank you for your rating!", newRating = store.Rating });
         }
+
+        [Authorize(Roles = "Customer")]
+        [HttpGet("my-orders")]
+        public async Task<IActionResult> GetMyOrders()
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var orders = await _context.Orders
+                .Where(o => o.CustomerID == userId && o.Status != "Cart")
+                .OrderByDescending(o => o.OrderDate)
+                .Select(o => new { o.OrderID, o.TotalAmount, o.Status, o.OrderDate })
+                .ToListAsync();
+            return Ok(orders);
+        }
+
+
     }
 }

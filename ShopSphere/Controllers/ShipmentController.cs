@@ -68,5 +68,15 @@ namespace ShopSphere.Controllers
             return Ok(shipments);
         }
 
+        [Authorize(Roles = "Logistics")]
+        [HttpGet("ready-orders")]
+        public async Task<IActionResult> GetReadyOrders()
+        {
+            var orders = await _context.Orders
+                .Where(o => o.Status == "Packed" && o.Shipment == null)
+                .Select(o => new { o.OrderID, o.TotalAmount, o.OrderDate }).ToListAsync();
+            return Ok(orders);
+        }
+
     }
 }

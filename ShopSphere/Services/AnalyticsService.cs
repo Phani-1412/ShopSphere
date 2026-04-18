@@ -37,12 +37,18 @@ namespace ShopSphere.Services
 
         public async Task<decimal> GetSellerRevenueAsync(int sellerId)
         {
-            return await _context.OrderItems
-                .Where(oi =>
-                    _context.Products.Any(p =>
-                        p.ProductID == oi.ProductID &&
-                        p.SellerID == sellerId))
+            var gross = await _context.OrderItems
+                .Where(oi => _context.Products.Any(p =>
+                            p.ProductID == oi.ProductID &&
+                            p.SellerID == sellerId) &&
+                            _context.Orders.Any(o =>
+                            o.OrderID == oi.OrderID && o.Status == "Delivered"))
                 .SumAsync(oi => (decimal?)oi.UnitPrice * oi.Quantity) ?? 0;
+
+            var commission = await _context.Commissions.FirstOrDefaultAsync();
+            if (commission == null) return gross;
+            return gross - (gross * commission.Percentage / 100m);
         }
+
     }
 }

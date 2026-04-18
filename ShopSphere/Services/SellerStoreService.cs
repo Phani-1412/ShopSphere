@@ -20,14 +20,13 @@ namespace ShopSphere.Services
                 SellerID = sellerId,
                 CategoryFocus = dto.CategoryFocus,
                 Rating = 0,
-                Status = "Active"
+                Status = "Pending"   // was "Active"
             };
-
             _context.SellerStores.Add(newStore);
             await _context.SaveChangesAsync();
-
-            return "Seller store created successfully.";
+            return "Store submitted for admin approval.";
         }
+
 
         public async Task<string> DeleteSellerStoreAsync(int sellerId, int storeId)
         {
